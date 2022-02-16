@@ -9,7 +9,6 @@ controller_components:
   - credentials
   - inventory_sources
   - job_templates
-  - workflow_job_templates
 
 controller_projects:
   - name: Fact Scan
