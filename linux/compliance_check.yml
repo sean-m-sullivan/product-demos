@@ -1,0 +1,11 @@
+- name: ENSURE COMPLIANCE FILES EXISTS
+  hosts: web
+  gather_facts: no
+  become: yes
+  tags: check-compliance
+
+  tasks:
+    - name: Validate whether compliance file exists
+      file:
+        path: /etc/compliance.cfg
+        state: file

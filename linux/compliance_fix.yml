@@ -1,0 +1,11 @@
+- name: ADD COMPLIANCE FILES
+  hosts: web
+  gather_facts: no
+  become: yes
+  tags: add-compliance
+
+  tasks:
+    - name: Ship compliance file to demo hosts
+      file:
+        path: /etc/compliance.cfg
+        state: touch

@@ -9,6 +9,7 @@ controller_components:
   - credentials
   - inventory_sources
   - job_templates
+  - workflow_job_templates
 
 controller_projects:
   - name: Fact Scan
@@ -33,6 +34,31 @@ controller_credential_types:
         INSIGHTS_USER: "{% raw %}{  { insights_user  }}{% endraw %}"
         INSIGHTS_PASSWORD: "{% raw %}{  { insights_password  }}{% endraw %}"
 
+  - name: "SNOW Credential Type"
+    description: "credential to store SNOW"
+    kind: cloud
+    inputs:
+      fields:
+        - id: SNOW_USERNAME
+          type: string
+          label: Service Now Username
+        - id: SNOW_INSTANCE
+          type: string
+          label: Service Now Instance Name (devXXXXX)
+        - id: SNOW_PASSWORD
+          type: string
+          label: Service Now Password
+          secret: true
+      required:
+        - SNOW_USERNAME
+        - SNOW_INSTANCE
+        - SNOW_PASSWORD
+    injectors:
+      extra_vars:
+        snow_username: "{% raw %}{  { SNOW_USERNAME  }}{% endraw %}"
+        snow_password: "{% raw %}{  { SNOW_PASSWORD  }}{% endraw %}"
+        snow_instance: "{% raw %}{  { SNOW_INSTANCE  }}{% endraw %}"
+
 controller_credentials:
   - name: Insights Inventory
     credential_type: Insights Collection
@@ -40,6 +66,15 @@ controller_credentials:
     inputs:
       insights_user: REPLACEME
       insights_password: REPLACEME
+
+  - name: SNOW Credential
+    description: Credentials
+    organization: Default
+    credential_type: "SNOW Credential Type"
+    inputs:
+      SNOW_USERNAME: "admin" #update after install
+      SNOW_PASSWORD: "XXX"   #update after install
+      SNOW_INSTANCE: "devXxxxx" #update after install
 
 controller_inventory_sources:
   - name: Insights Inventory
@@ -265,3 +300,201 @@ controller_templates:
           type: textarea
           variable: message
           required: true
+
+  - name: "Rollback"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "linux/backup.yml"
+    execution_environment: "Default execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Open SNOW Change Request"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "linux/snow.yml"
+    credentials:
+    - "SNOW Credential"
+    - "Workshop Credential"
+
+  - name: "Send Completion Notification"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "linux/backup.yml"
+    execution_environment: "Default execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Alert Ops!"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "linux/backup.yml"
+    execution_environment: "Default execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Compliance Check"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance_check.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Compliance Fix"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance_fix.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Compliance Reset"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance_reset.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Compliance Seed"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/compliance_seed.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
+controller_workflows:
+  - name: "Deployment Demo Workflow"
+    organization:
+      name: "Default"
+    workflow_nodes:
+      - unified_job_template:
+          name: "Ansible official demo project"
+          type: project_update
+          organization:
+            name: "Default"
+        identifier: node100
+        related:
+          success_nodes:
+          - identifier: node101
+      - unified_job_template:
+          name: "Open SNOW Change Request"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node101
+        related:
+          success_nodes:
+          - identifier: node201
+      - unified_job_template:
+          name: "Compliance Check"
+          Type: job_template
+          organization:
+            name: "Default"
+        identifier: node201
+        related:
+          success_nodes:
+          - identifier: node301
+          failure_nodes:
+          - identifier: node302
+          always_nodes: []
+      - unified_job_template:
+          name: "LINUX / Patching"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node301
+        related:
+          success_nodes:
+            - identifier: node401
+          failure_nodes:
+            - identifier: node402
+          always_nodes: []
+      - unified_job_template:
+          name: "Alert Ops!"
+          type: job_template
+          organization:
+            name: "Default"
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+        identifier: node302
+      - unified_job_template:
+          name: "INFRASTRUCTURE / Deploy Application"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node401
+        related:
+          success_nodes:
+            - identifier: node501
+          failure_nodes:
+            - identifier: node502
+          always_nodes: []
+      - unified_job_template:
+          name: "Rollback"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node402
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+      - unified_job_template:
+          name: "Compliance Check"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node501
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+      - unified_job_template:
+          name: "Manual override"
+          type: workflow_approval
+          organization:
+            name: "Default"
+        related:
+          success_nodes:
+            - identifier: node601
+          failure_nodes:
+            - identifier: node602
+          always_nodes: []
+        identifier: node502
+      - unified_job_template:
+          name: "Rollback"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node602
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+      - unified_job_template:
+          name: "Alert Ops!"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: node601
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []

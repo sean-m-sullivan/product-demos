@@ -1,0 +1,10 @@
+- name: SEED 2 SERVERS
+  hosts: node1, node3
+  gather_facts: no
+  become: yes
+  tags: seed
+  tasks:
+    - name: Ship compliance file to demo hosts
+      file:
+        path: /etc/compliance.cfg
+        state: touch
