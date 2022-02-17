@@ -377,6 +377,15 @@ controller_templates:
     credentials:
     - "Workshop Credential"
 
+  - name: "Server Report"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "linux/server_report.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
 controller_workflows:
   - name: "Deployment Demo Workflow"
     organization:
