@@ -402,7 +402,7 @@ controller_workflows:
           - identifier: node201
       - unified_job_template:
           name: "Compliance Check"
-          Type: job_template
+          type: job_template
           organization:
             name: "Default"
         identifier: node201
