@@ -386,6 +386,15 @@ controller_templates:
     credentials:
     - "Workshop Credential"
 
+  - name: "INFRASTRUCTURE / Deploy Application"
+    job_type: run
+    inventory: "Workshop Inventory"
+    project: "Ansible official demo project"
+    playbook: "playbooks/infrastructure/deploy_application.yml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
+    credentials:
+    - "Workshop Credential"
+
 controller_workflows:
   - name: "Deployment Demo Workflow"
     organization:
@@ -439,6 +448,8 @@ controller_workflows:
           type: job_template
           organization:
             name: "Default"
+          extra_vars:
+            application: httpd
         identifier: node401
         related:
           success_nodes:
