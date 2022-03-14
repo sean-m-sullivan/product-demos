@@ -448,9 +448,9 @@ controller_workflows:
           type: job_template
           organization:
             name: "Default"
-          extra_data:
-            application: httpd
         identifier: node401
+        extra_data:
+            application: httpd
         related:
           success_nodes:
             - identifier: node501
