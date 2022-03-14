@@ -449,8 +449,6 @@ controller_workflows:
           organization:
             name: "Default"
         identifier: node401
-        extra_data:
-            application: httpd
         related:
           success_nodes:
             - identifier: node501
