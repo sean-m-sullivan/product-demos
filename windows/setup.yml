@@ -314,6 +314,8 @@ controller_workflows:
           organization:
             name: "Default"
         identifier: node201
+        extra_data:
+          HOSTS: student1-win1
         related:
           success_nodes:
           - identifier: node301
