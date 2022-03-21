@@ -24,8 +24,10 @@ controller_inventory_sources:
   source: scm
   source_project: "Ansible official demo project"
   source_path: aws/inventory
-  update_on_launch: no
+  description: static inventory
+  update_on_launch: yes
   state: present
+  update_cache_timeout: 0
 
 controller_credential_types:
   - name: "SNOW Credential Type"
