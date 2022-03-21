@@ -20,7 +20,7 @@ controller_inventories:
 
 controller_inventory_sources:
 - name: "Git sourced inventory"
-  inventory: "Inventory"
+  inventory: "Static AWS"
   source: scm
   source_project: "Ansible official demo project"
   source_path: aws/inventory
