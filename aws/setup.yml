@@ -118,6 +118,7 @@ controller_templates:
     inventory: "Static AWS"
     project: "Ansible official demo project"
     playbook: "aws/aws-lab.yaml"
+    execution_environment: "Ansible Engine 2.9 execution environment"
     extra_vars:
       activity: create-infra
     credentials:
@@ -127,6 +128,7 @@ controller_templates:
     job_type: run
     inventory: "Static AWS"
     project: "Ansible official demo project"
+    execution_environment: "Ansible Engine 2.9 execution environment"
     playbook: "aws/aws-lab.yaml"
     extra_vars:
       activity: create-vm
@@ -136,6 +138,7 @@ controller_templates:
   - name: "Destroy the AWS Infra"
     job_type: run
     inventory: "Static AWS"
+    execution_environment: "Ansible Engine 2.9 execution environment"
     project: "Ansible official demo project"
     playbook: "aws/aws-lab.yaml"
     extra_vars:
