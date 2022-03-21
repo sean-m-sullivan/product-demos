@@ -11,11 +11,6 @@ controller_components:
   - job_templates
   - workflow_job_templates
 
-controller_projects:
-  - name: Fact Scan
-    organization: Default
-    scm_type: git
-    scm_url: 'https://github.com/ansible/awx-facts-playbooks.git'
 
 controller_inventories:
 - name: Static AWS
