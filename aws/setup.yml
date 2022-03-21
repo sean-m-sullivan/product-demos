@@ -1,0 +1,216 @@
+---
+user_message: |
+  You will need to update SNOW credentials with your SNOW instance details if you plan to demo this.
+
+controller_components:
+  - projects
+  - inventories
+  - inventory_sources
+  - credential_types
+  - credentials
+  - job_templates
+  - workflow_job_templates
+
+controller_projects:
+  - name: Fact Scan
+    organization: Default
+    scm_type: git
+    scm_url: 'https://github.com/ansible/awx-facts-playbooks.git'
+
+controller_inventories:
+- name: Static AWS
+  organization: Default
+  description: AWS inventory
+  state: present
+
+controller_inventory_sources:
+- name: "Git sourced inventory"
+  inventory: "Inventory"
+  source: scm
+  source_project: "Ansible official demo project"
+  source_path: aws/inventory
+  update_on_launch: no
+  state: present
+
+controller_credential_types:
+  - name: "SNOW Credential Type"
+    description: "credential to store SNOW"
+    kind: cloud
+    inputs:
+      fields:
+        - id: SNOW_USERNAME
+          type: string
+          label: Service Now Username
+        - id: SNOW_INSTANCE
+          type: string
+          label: Service Now Instance Name (devXXXXX)
+        - id: SNOW_PASSWORD
+          type: string
+          label: Service Now Password
+          secret: true
+      required:
+        - SNOW_USERNAME
+        - SNOW_INSTANCE
+        - SNOW_PASSWORD
+    injectors:
+      extra_vars:
+        snow_username: "{% raw %}{  { SNOW_USERNAME  }}{% endraw %}"
+        snow_password: "{% raw %}{  { SNOW_PASSWORD  }}{% endraw %}"
+        snow_instance: "{% raw %}{  { SNOW_INSTANCE  }}{% endraw %}"
+
+controller_credentials:
+- name: SNOW Credential
+  description: Credentials
+  organization: Default
+  credential_type: "SNOW Credential Type"
+  inputs:
+    SNOW_USERNAME: "admin" #update after install
+    SNOW_PASSWORD: "XXX"   #update after install
+    SNOW_INSTANCE: "devXxxxx" #update after install
+
+- name: AWS Credential
+  description: AWS
+  organization: Default
+  credential_type: "Amazon Web Services"
+  updated_secrets: false
+  inputs:
+    username: REPLACEME
+    password: REPLACEME
+
+controller_templates:
+  - name: "Rollback"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "aws/backup.yml"
+    execution_environment: "Default execution environment"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Open SNOW Change Request"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "aws/snow.yml"
+    credentials:
+    - "SNOW Credential"
+    - "Workshop Credential"
+
+  - name: "Send Completion Notification"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "aws/backup.yml"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Alert Ops!"
+    job_type: run
+    inventory: "Workshop Inventory"
+    limit: "ansible-1"
+    project: "Ansible official demo project"
+    playbook: "aws/backup.yml"
+    credentials:
+    - "Workshop Credential"
+
+  - name: "Create the AWS Infra"
+    job_type: run
+    inventory: "Static AWS"
+    project: "Ansible official demo project"
+    playbook: "aws/aws-lab.yaml"
+    extra_vars:
+      activity: create-infra
+    credentials:
+    - "AWS Credential"
+
+  - name: "Create the VMs on AWS"
+    job_type: run
+    inventory: "Static AWS"
+    project: "Ansible official demo project"
+    playbook: "aws/aws-lab.yaml"
+    extra_vars:
+      activity: create-vm
+    credentials:
+    - "AWS Credential"
+
+  - name: "Destroy the AWS Infra"
+    job_type: run
+    inventory: "Static AWS"
+    project: "Ansible official demo project"
+    playbook: "aws/aws-lab.yaml"
+    extra_vars:
+      activity: destroy-lab
+    credentials:
+    - "AWS Credential"
+
+controller_workflows:
+  - name: "AWS Demo Workflow"
+    organization:
+      name: "Default"
+    workflow_nodes:
+      - unified_job_template:
+          name: "Open SNOW Change Request"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: "SNOW Change Request"
+        related:
+          always_nodes:
+          - identifier: "Create AWS Infra"
+      - unified_job_template:
+          name: "Create the AWS Infra"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: "Create AWS Infra"
+        related:
+          success_nodes:
+          - identifier: "Create VMs"
+          failure_nodes:
+          - identifier: "Rollback Infra"
+          always_nodes: []
+      - unified_job_template:
+          name: "Create the VMs on AWS"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: "Create VMs"
+        related:
+          success_nodes:
+            - identifier: "Send Completion Notification"
+          failure_nodes:
+            - identifier: "Rollback VM"
+          always_nodes: []
+      - unified_job_template:
+          name: "Rollback"
+          type: job_template
+          organization:
+            name: "Default"
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+        identifier: "Rollback Infra"
+      - unified_job_template:
+          name: "Rollback"
+          type: job_template
+          organization:
+            name: "Default"
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
+        identifier: "Rollback VM"
+      - unified_job_template:
+          name: "Send Completion Notification"
+          type: job_template
+          organization:
+            name: "Default"
+        identifier: "Send Completion Notification"
+        related:
+          success_nodes: []
+          failure_nodes: []
+          always_nodes: []
